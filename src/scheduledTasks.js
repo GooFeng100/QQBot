@@ -57,11 +57,11 @@ async function dailyPins(bot) {
     try {
         //获得精华消息
         const { data: { message_ids } } = await bot.api.getChannelPin(generateConfig().trialChannel);
-        logger.debug(message_ids)
+        //logger.debug(message_ids)
         //删除精华消息
         if (message_ids.length > 0) {
             await bot.api.deleteChannelPin(generateConfig().trialChannel, message_ids[0]);
-            logger.info('没有精华消息删除成功。')
+            logger.info('精华消息删除成功。')
         } else {
             logger.info('没有精华消息。')
         }
@@ -69,7 +69,7 @@ async function dailyPins(bot) {
         const res = await getAccount.main();
         //用户推送
         const { data: { id: msgid } } = await bot.api.sendChannelMessage(generateConfig().trialChannel, {
-            content: `🎊以下试用账号，你可尝试，不过不保证体验效果。\n更新日期：${new Date()}\n${res}`,
+            content: `🎊以下试用账号，你可尝试，不过不保证体验效果。试用频道每人开发权限仅一周。如需稳定账号，请联系管理员。\n更新日期：${new Date()}\n${res}`,
         });
         await bot.api.deleteChannelPin(generateConfig().trialChannel, msgid);
         logger.info('精华消息设置成功。')
