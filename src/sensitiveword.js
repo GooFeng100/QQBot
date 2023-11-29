@@ -5,5 +5,4 @@ const sensitiveWordTool = new SensitiveWordTool({
     //默认敏感词词库
     useDefaultWords: true
 })
-
 module.exports = sensitiveWordTool;

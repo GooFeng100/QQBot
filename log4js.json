@@ -1,0 +1,24 @@
+{
+    "appenders": {
+        "file": {
+            "type": "dateFile",
+            "filename": "./logs/BOT",
+            "pattern": "yyyy-MM-dd.log",
+            "alwaysIncludePattern": true,
+            "numBackups": 7
+        },
+        "console": {
+            "type": "console"
+        }
+    },
+    "categories": {
+        "default": {
+            "appenders": [
+                "file",
+                "console"
+            ],
+            "level": "debug"
+        }
+    }
+}
+

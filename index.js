@@ -4,8 +4,15 @@ const generateConfig = require('./config.js');
 const operationDatabase = require('./src/database.js');
 const schedule = require('node-schedule');
 const tasks = require('./src/scheduledTasks.js')
-const main = require('./src/getAccount.js')
+const getAccount = require('./src/getAccount.js')
+const log4js = require('log4js');
 
+//加载日志全局配置
+log4js.configure('./log4js.json')
+//获取全局logger
+const logger = log4js.getLogger('BOT');
+
+//bot配置
 const bot = new Bot({
     appid: '102078084',
     token: 'zvGOeAQk9Nzj5c5H9XKAqBACYk4YZdGw',
@@ -22,9 +29,12 @@ bot
 // 定义规则
 const rule = new schedule.RecurrenceRule();
 // rule.second = [0, 10, 20, 30, 40, 50]; // 每隔 10 秒执行一次/
-rule.hour =8;
-rule.minute =0;
-rule.second =0;
+// 每月1号执行任务
+rule.dayOfWeek=[1]
+// rule.date = 1;
+rule.hour = 0;
+rule.minute = 0;
+rule.second = 0;
 
 // 启动任务
 const job = schedule.scheduleJob(rule, () => {
@@ -52,25 +62,22 @@ async function msgProcess(data) {
     // 撤回消息，跳出程序,1-退出，0继续
     const allowedEventTypes = ['MESSAGE_DELETE', 'PUBLIC_MESSAGE_DELETE'];
     if (allowedEventTypes.includes(eventType)) {
-        console.log('撤销事件不做处理。');
+        logger.info('撤销事件不做处理。');
         return;
         //敏感词，1-退出，0继续
     } else if (sensitiveWordTool.verify(content)) {
         try {
-            console.log('存在敏感词，执行撤销......', '>>>', content);
+            logger.info('存在敏感词，执行撤销......', '>>>', content);
             await bot.api.deleteChannelMessage(channelid, msgid);
-            return;
         } catch (error) {
-            console.log('撤销消息出错:', error);
+            logger.error('撤销消息出错:', error);
         }
         //@bot，1-继续，0退出
     } else if (!mentions.some(e => e.id === generateConfig().botID)) {
-        console.log('消息不是@BOT。');
-        return;
+        logger.info('消息不是@BOT。');
         //频道，1-继续，0退出
     } else if (channelid !== generateConfig().homeChannel) {
-        console.log('不是指定频道事件');
-        return;
+        logger.info('不是指定频道事件');
         //关键词，1-继续，0退出
     } else {
         switch (content) {
@@ -79,7 +86,7 @@ async function msgProcess(data) {
                 const selectSql = `SELECT userid,username,jointime FROM gpt_trials WHERE userid = ${userid};`;
                 try {
                     const selectData = await operationDatabase(selectSql);
-                    console.log('数据库查询完成。');
+                    logger.info('数据库查询完成。');
                     const rejectMsgParams = {
                         //调用拒绝消息
                         content: generateConfig(username).rejectedMsg,
@@ -99,24 +106,24 @@ async function msgProcess(data) {
                     //userid是否在数据库
                     if (selectData.length) {
                         //1-查询到数据
-                        console.log('查询到数据。');
-                        //检测是否大于24小时
+                        logger.info('查询到数据。');
+                        //检测是否大于lockTime小时
                         const currentTime = new Date();
                         const jointimeDate = new Date(selectData[0].jointime);
                         const timeDifference = currentTime - jointimeDate;
-                        if (timeDifference / (1000 * 60 * 60) >= 24) {
+                        if (timeDifference / (1000 * 60 * 60) >= generateConfig().lockTime) {
                             //执行sendmsg(你已经试用过，请联系管理员)
                             await bot.api.sendChannelMessage(channelid, rejectMsgParams);
-                            console.log(`${username},超时，未获得授权。`);
+                            logger.info(`${username},超时，未获得授权。`);
                         } else {
                             //执行sendmsg(恭喜你已获得权限，#试用频道)
                             await bot.api.sendChannelMessage(channelid, allowedMsgParams);
-                            console.log(`${username},获得授权。`);
+                            logger.info(`${username},获得授权。`);
                         }
                     } else {
                         //0-未查询到数据。
-                        console.log('未查询到数据。');
-                        console.log('写入数据......');
+                        logger.info('未查询到数据。');
+                        logger.info('写入数据......');
                         //增加目标信息进数据库
                         const addSql = 'INSERT INTO gpt_trials (userid, username, channelid) VALUES (?, ?, ?)';
                         const addValues = [userid, username, channelid];
@@ -124,46 +131,46 @@ async function msgProcess(data) {
                         //添加身身份证
                         const { status } = await bot.api.addGuildMemberRole(generateConfig().guild_id, userid, generateConfig().GPTRols);
                         if (status === 204) {
-                            console.log(`status:${status},${username},授权成功。`);
+                            logger.info(`status:${status},${username},授权成功。`);
                             //发送欢迎语
                             await bot.api.sendChannelMessage(channelid, allowedMsgParams);
                         } else {
-                            console.log(`status:${status},${username},授权失败。`);
+                            logger.info(`status:${status},${username},授权失败。`);
                         }
                     }
                 } catch (error) {
-                    console.log('ERROR:', error);
+                    logger.error('ERROR:', error);
                 }
                 break;
             case 'GPT':
                 //网络爬虫
-                const res = await main();
-                console.log(res);
+                const res = await getAccount.main();
                 try {
                     //用户推送
                     await bot.api.sendChannelMessage(channelid, {
-                        content: `${username}，你好！\n以下试用账号，你可尝试，不过不保证体验效果。\n${res}`,
+                        content: `${username}，你好！\n😁以下试用账号，你可尝试，不过不保证体验效果。\n${res}`,
                         message_reference: {
                             message_id: msgid
                         },
                         msg_id: msgid
                     })
                 } catch (error) {
-                    console.log('ERROR:', error);
+                    logger.error('ERROR:', error);
                 }
                 break;
             default:
-                console.log('不是指定关键词事件');
+                logger.info('不是指定关键词事件');
                 try {
+                    const data = await getAccount.byword();
                     await bot.api.sendChannelMessage(channelid, {
-                        content: `${username}，你好！有什么可以帮你？`,
+                        content: `${username}，你好！有什么可以帮你？\n\n💡${data.hitokoto}\n📒${data.from}\n🙋${data.from_who}`,
                         message_reference: {
                             message_id: msgid
                         },
                         msg_id: msgid
                     })
                 } catch (error) {
-                    console.log('ERROR:', error);
+                    logger.error('ERROR:', error);
                 }
                 break;
         }

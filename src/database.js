@@ -1,4 +1,5 @@
 const mysql = require('mysql2/promise');
+const logger=require('log4js').getLogger('BOT');
 // 创建数据库连接
 const pool = mysql.createPool({
     host: 'sh-cdb-1i8145l0.sql.tencentcdb.com',
@@ -10,20 +11,14 @@ const pool = mysql.createPool({
 });
 
 async function operationDatabase(sql, values =[]) {
-
-    // const sql='SELECT * FROM channelinfo WHERE channel_id=?';
     try {
         const [rows, fields] = await pool.execute(sql, values);
-        console.log('............数据库操作...........');
-        console.log('The results is: \n', rows);
-        console.log('..........数据库显示完成..........');
+        logger.info('The results is: \n', rows);
         return rows;
     } catch (error) {
-        console.log('数据库模块查询错误。', error.message);
-        throw error;
+        logger.error('数据库模块查询错误。', error.message);
     }
 };
-
 module.exports = operationDatabase;
 
 
