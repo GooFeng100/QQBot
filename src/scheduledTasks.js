@@ -1,8 +1,9 @@
 const generateConfig = require('../config.js')
 const operationDatabase = require('./database.js')
-const logger=require('log4js').getLogger('BOT')
+const logger = require('log4js').getLogger('BOT')
+const getAccount = require('./getAccount.js')
 
-async function tasks(bot) {
+async function tasksCheck(bot) {
     logger.info('定时任务开始......');
     let userIds = [];
     try {
@@ -39,7 +40,7 @@ async function tasks(bot) {
                         logger.info('STATUS:', status, '移除身份证失败。');
                     }
                 } catch (error) {
-                    logger.error('EEOR:', error);
+                    logger.error('ERROR:', error);
                 }
             } else {
                 //不超过24小时的。
@@ -47,7 +48,35 @@ async function tasks(bot) {
             }
         } else {
             //如果userid不存在
+            logger.info('userid不存在。')
         }
     }
 }
-module.exports = tasks;
+
+async function dailyPins(bot) {
+    try {
+        //获得精华消息
+        const { data: { message_ids } } = await bot.api.getChannelPin(generateConfig().trialChannel);
+        logger.debug(message_ids)
+        //删除精华消息
+        if (message_ids.length > 0) {
+            await bot.api.deleteChannelPin(generateConfig().trialChannel, message_ids[0]);
+            logger.info('没有精华消息删除成功。')
+        } else {
+            logger.info('没有精华消息。')
+        }
+        //获取网络账号
+        const res = await getAccount.main();
+        //用户推送
+        const { data: { id: msgid } } = await bot.api.sendChannelMessage(generateConfig().trialChannel, {
+            content: `🎊以下试用账号，你可尝试，不过不保证体验效果。\n更新日期：${new Date()}\n${res}`,
+        });
+        await bot.api.deleteChannelPin(generateConfig().trialChannel, msgid);
+        logger.info('精华消息设置成功。')
+    } catch (error) {
+        logger.error('ERROR:', error)
+    }
+};
+
+
+module.exports = { tasksCheck, dailyPins }

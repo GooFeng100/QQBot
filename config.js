@@ -15,7 +15,7 @@ function generateConfig(username = '') {
         //超时拒绝msg
         rejectedMsg: `你好，${username}:\n你已经试用过4.0。为了让其他小伙伴有更好的试用体验，已拒绝你再次获得进入试用频道。\n如果你想长期稳定地使用4.0，请联系管理员。谢谢。`,
         allowedMsg: `你好，${username}:\n欢迎来到本频道，你已获得权限。点击下面链接，你将进入4.0频道。\n<#${trialChannel}>`,
-
+        trialChannel,
     };
 }
 

@@ -27,18 +27,27 @@ bot
 
 //定时任务
 // 定义规则
-const rule = new schedule.RecurrenceRule();
-// rule.second = [0, 10, 20, 30, 40, 50]; // 每隔 10 秒执行一次/
-// 每月1号执行任务
-rule.dayOfWeek=[1]
+const rule1 = new schedule.RecurrenceRule();
+const rule2 = new schedule.RecurrenceRule();
+// rule1.second = [0, 10, 20, 30, 40, 50]; // 每隔 10 秒执行一次/
+// 每周1号执行任务
+rule1.dayOfWeek = [1]
 // rule.date = 1;
-rule.hour = 0;
-rule.minute = 0;
-rule.second = 0;
-
-// 启动任务
-const job = schedule.scheduleJob(rule, () => {
-    tasks(bot);
+rule1.hour = 0;
+rule1.minute = 0;
+rule1.second = 0;
+// 启动任务1
+schedule.scheduleJob(rule1, () => {
+    tasks.tasksCheck(bot);
+});
+//每天任务
+rule2.second = [0, 10, 20, 30, 40, 50]; // 每隔 10 秒执行一次/
+// rule2.hour = 12;
+// rule2.minute = 0;
+// rule2.second = 0;
+// 启动任务2
+schedule.scheduleJob(rule2, () => {
+    tasks.dailyPins(bot);
 });
 
 
@@ -143,20 +152,7 @@ async function msgProcess(data) {
                 }
                 break;
             case 'GPT':
-                //网络爬虫
-                const res = await getAccount.main();
-                try {
-                    //用户推送
-                    await bot.api.sendChannelMessage(channelid, {
-                        content: `${username}，你好！\n😁以下试用账号，你可尝试，不过不保证体验效果。\n${res}`,
-                        message_reference: {
-                            message_id: msgid
-                        },
-                        msg_id: msgid
-                    })
-                } catch (error) {
-                    logger.error('ERROR:', error);
-                }
+                
                 break;
             default:
                 logger.info('不是指定关键词事件');
