@@ -51,7 +51,6 @@ async function byword() {
     try {
         const {data} = await axios.get('https://v1.hitokoto.cn/?encode=json&c=d&c=j&c=k&c=k&c=i&lang=cn');
         logger.info('获取名言成功');
-        console.log(data);
         return data;
     } catch (error) {
         logger.error('获取名言发生错误:', error.message);
