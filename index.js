@@ -17,7 +17,7 @@ const bot = new Bot({
     appid: '102078084',
     token: 'zvGOeAQk9Nzj5c5H9XKAqBACYk4YZdGw',
     secret: 'h0A960kHdliT1LRJ',
-    events: ['GUILD_MESSAGES', 'PUBLIC_GUILD_MESSAGES'],
+    events: ['GUILD_MESSAGES', 'MESSAGE_AUDIT', 'PUBLIC_GUILD_MESSAGES'],
 });
 
 // 监听频道消息
@@ -41,17 +41,14 @@ schedule.scheduleJob(rule1, () => {
     tasks.tasksCheck(bot);
 });
 //每天任务
-rule2.second = [0, 10, 20, 30, 40, 50]; // 每隔 10 秒执行一次/
-// rule2.hour = 12;
-// rule2.minute = 0;
-// rule2.second = 0;
+// rule2.second = [0, 10, 20, 30, 40, 50]; // 每隔 10 秒执行一次/
+rule2.hour = 12;
+rule2.minute = 0;
+rule2.second = 0;
 // 启动任务2
 schedule.scheduleJob(rule2, () => {
     tasks.dailyPins(bot);
 });
-
-
-
 
 //业务流程
 async function msgProcess(data) {
@@ -70,9 +67,13 @@ async function msgProcess(data) {
     content = content.replace(/<[^>]+>/g, '').trim();
     // 撤回消息，跳出程序,1-退出，0继续
     const allowedEventTypes = ['MESSAGE_DELETE', 'PUBLIC_MESSAGE_DELETE'];
-    if (allowedEventTypes.includes(eventType)) {
+    if (eventType === 'MESSAGE_AUDIT_PASS') {
+        logger.info('消息审核通过。');
+        tasks.dailyPinsAuditPass(bot, data.message_id);
+    } else if (eventType === 'MESSAGE_AUDIT_REJECT') {
+        logger.info('消息审核失败。');
+    } else if (allowedEventTypes.includes(eventType)) {
         logger.info('撤销事件不做处理。');
-        return;
         //敏感词，1-退出，0继续
     } else if (sensitiveWordTool.verify(content)) {
         try {
@@ -152,7 +153,7 @@ async function msgProcess(data) {
                 }
                 break;
             case 'GPT':
-                
+
                 break;
             default:
                 logger.info('不是指定关键词事件');

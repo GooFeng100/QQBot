@@ -39,6 +39,7 @@ async function main() {
         }).join('\n'); // 使用两个换行符分隔每个账号密码对
 
         // 返回结果字符串
+        logger.info('爬虫账号成功。')
         return resultString;
     } catch (error) {
         logger.error('发生错误:', error.message);
