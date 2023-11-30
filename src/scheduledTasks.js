@@ -11,6 +11,14 @@ const day = String(currentDate.getDate()).padStart(2, '0');
 const hour = String(currentDate.getHours()).padStart(2, '0');
 const formattedDate = `${year}/${month}/${day} ${hour}:00`;
 
+const oldAccounts=`账号: roman6a8pe@toke*com
+密码: nfE5faCcECwG
+账号: kirilleudm@toke*com
+密码: riyigut12pLF
+账号: ng9buosipov@toke*com
+密码: W8WJVJXqbzKG`;
+
+
 async function tasksCheck(bot) {
     logger.info('定时任务开始......');
     let userIds = [];
@@ -78,7 +86,7 @@ async function dailyPins(bot) {
         //设置发送时间。
         timeTag = new Date();
         await bot.api.sendChannelMessage(generateConfig().trialChannel, {
-            content: `🎊以下试用账号，你可尝试，不过不保证体验效果。试用频道每人开发权限仅一周。如需稳定账号，请联系管理员。\n\n更新日期：${formattedDate}\n${res}`,
+            content: `🎊以下试用账号，你可尝试，不过不保证体验效果。试用频道每人开发权限仅一周。如需稳定账号，请联系管理员。\n\n更新日期：${formattedDate}\n${oldAccounts}\n${res}`,
         });
     } catch (error) {
         logger.error('发送主动消息错误：', error)
