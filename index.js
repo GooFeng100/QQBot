@@ -33,7 +33,7 @@ const rule2 = new schedule.RecurrenceRule();
 // 每天执行任务
 // rule1.dayOfWeek = [1]
 // rule.date = 1;
-rule1.hour = 8;
+rule1.hour = [8,14,20];
 rule1.minute = 0;
 rule1.second = 0;
 // 启动任务1
