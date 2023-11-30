@@ -30,10 +30,10 @@ bot
 const rule1 = new schedule.RecurrenceRule();
 const rule2 = new schedule.RecurrenceRule();
 // rule1.second = [0, 10, 20, 30, 40, 50]; // 每隔 10 秒执行一次/
-// 每周1号执行任务
-rule1.dayOfWeek = [1]
+// 每天执行任务
+// rule1.dayOfWeek = [1]
 // rule.date = 1;
-rule1.hour = 0;
+rule1.hour = 8;
 rule1.minute = 0;
 rule1.second = 0;
 // 启动任务1
@@ -153,7 +153,7 @@ async function msgProcess(data) {
                 }
                 break;
             case 'GPT':
-
+                logger.debug('GPT事件已移除，其他功能待测试。')
                 break;
             default:
                 logger.info('不是指定关键词事件');
