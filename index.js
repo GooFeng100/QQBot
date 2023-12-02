@@ -42,7 +42,7 @@ schedule.scheduleJob(rule1, () => {
 });
 //每天任务
 // rule2.second = [0, 10, 20, 30, 40, 50]; // 每隔 10 秒执行一次/
-rule2.hour = [9, 14, 19];
+rule2.hour = [10, 14, 19];
 rule2.minute = 0;
 rule2.second = 0;
 // 启动任务2

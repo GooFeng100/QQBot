@@ -3,20 +3,27 @@ const operationDatabase = require('./database.js')
 const logger = require('log4js').getLogger('BOT')
 const getAccount = require('./getAccount.js')
 
-//格式化日期
-const currentDate = new Date();
-const year = currentDate.getFullYear();
-const month = String(currentDate.getMonth() + 1).padStart(2, '0'); // Month is zero-based
-const day = String(currentDate.getDate()).padStart(2, '0');
-const hour = String(currentDate.getHours()).padStart(2, '0');
-const formattedDate = `${year}/${month}/${day} ${hour}:00`;
+class DateFormatter {
+    constructor() {
+        this.currentDate = new Date();
+    }
 
-const oldAccounts=`账号: roman6a8pe@toke*com
+    getFormattedDate() {
+        const year = this.currentDate.getFullYear();
+        const month = String(this.currentDate.getMonth() + 1).padStart(2, '0'); // Month is zero-based
+        const day = String(this.currentDate.getDate()).padStart(2, '0');
+        const hour = String(this.currentDate.getHours()).padStart(2, '0');
+        return `${year}/${month}/${day} ${hour}:00`;
+    }
+}
+
+const oldAccounts = `账号: roman6a8pe@toke*com
 密码: nfE5faCcECwG
 账号: kirilleudm@toke*com
 密码: riyigut12pLF
 账号: ng9buosipov@toke*com
 密码: W8WJVJXqbzKG`;
+
 
 
 async function tasksCheck(bot) {
@@ -86,7 +93,7 @@ async function dailyPins(bot) {
         //设置发送时间。
         timeTag = new Date();
         await bot.api.sendChannelMessage(generateConfig().trialChannel, {
-            content: `🎊以下试用账号，你可尝试，不过不保证体验效果。试用频道每人开发权限仅一周。如需稳定账号，请联系管理员。\n\n更新日期：${formattedDate}\n${oldAccounts}\n${res}`,
+            content: `🎊以下试用账号，你可尝试，不过不保证体验效果。试用频道每人开发权限仅一周。如需稳定账号，请联系管理员。\n\n更新日期：${new DateFormatter().getFormattedDate()}\n${oldAccounts}\n${res}`,
         });
     } catch (error) {
         logger.error('发送主动消息错误：', error)
