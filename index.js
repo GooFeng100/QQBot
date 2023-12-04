@@ -113,6 +113,7 @@ async function msgProcess(data) {
                 const result = await new DynamoDBClient().get('gpt_members', { userid: userid })
                 if (result !== 'NOTFOUND') {
                     //查询到用户信息
+                    logger.info('查询到用户信息。')
                     //判断是否超时试用
                     if ((Math.floor(Date.now()) - result.jointime) / 1000 / 60 / 60 >= generateConfig().lockTime) {
                         //执行sendmsg(你已经试用过，请联系管理员)
@@ -121,7 +122,7 @@ async function msgProcess(data) {
                     } else {
                         //执行sendmsg(恭喜你已获得权限，#试用频道)
                         await bot.api.sendChannelMessage(channelid, allowedMsgParams);
-                        logger.info(`${username},获得授权。`);
+                        logger.info(`${username},已获得授权。`);
                     }
                 } else {
                     //未查询到用户信息
