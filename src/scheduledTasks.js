@@ -1,7 +1,7 @@
 const generateConfig = require('../config.js')
-const operationDatabase = require('./database.js')
 const logger = require('log4js').getLogger('BOT')
 const getAccount = require('./getAccount.js')
+const DynamoDBClient = require('./AWSDatabase.js')
 
 class DateFormatter {
     constructor() {
@@ -44,14 +44,12 @@ async function tasksCheck(bot) {
     }
     //数据库逐个查询jointime
     for (const element of userIds) {
-        const res = await operationDatabase(`SELECT jointime FROM gpt_trials WHERE userid = ${element};`)
+        const res = await new DynamoDBClient().get('gpt_members', { userid: element })
+        logger.debug(res)
         //如果该userid有
-        if (res.length > 0) {
-            const [{ jointime = '' }] = res;
+        if (res !== 'NOTFOUND') {
             //判断事件是否超过lock时间。
-            const currentTime = new Date();
-            const timeDifference = currentTime - jointime;
-            if (timeDifference / (1000 * 60 * 60) > generateConfig().lockTime) {
+            if (Math.floor((Date.now()-res.jointime)/1000/60/60) >= generateConfig().lockTime) {
                 try {
                     const { status } = await bot.api.deleteGuildMemberRole(
                         generateConfig().guild_id,
@@ -68,7 +66,8 @@ async function tasksCheck(bot) {
                 }
             } else {
                 //不超过24小时的。
-                logger.info(`未超过指定试用时间：${generateConfig().lockTime}小时`)
+                logger.info('试用时间：',Math.floor((Date.now()-res.jointime)/1000/60/60),'小时');
+                logger.info(`未超过指定试用时间：${generateConfig().lockTime}小时`);
             }
         } else {
             //如果userid不存在

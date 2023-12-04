@@ -109,7 +109,9 @@ class DynamoDBClient {
 }
 module.exports = DynamoDBClient;
 
-// console.log(Math.floor(Date.now() / 1000)); 时间戳毫秒级
+
+
+console.log(Math.floor((Date.now()-1701273600000)/1000/60/60));
 /* 
 (async () => {
     console.log(await new DynamoDBClient().scan(
