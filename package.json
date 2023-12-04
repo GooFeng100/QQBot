@@ -10,6 +10,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.465.0",
+    "@aws-sdk/lib-dynamodb": "^3.465.0",
     "amesu": "^2.0.7",
     "axios": "^1.6.2",
     "log4js": "^6.9.1",

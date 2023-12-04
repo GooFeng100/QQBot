@@ -34,8 +34,8 @@ class DynamoDBClient {
          */
         try {
             const data = await this.ddbDocClient.get({ TableName, Key });
-            
-            return data.Item?data.Item:'NOTFOUND';
+
+            return data.Item ? data.Item : 'NOTFOUND';
         } catch (error) {
             console.log("Get Error:", error);
         }
@@ -54,7 +54,10 @@ class DynamoDBClient {
         */
         try {
             await this.ddbDocClient.put({ TableName, Item });
-            return Item;
+            return {
+                code: 200,
+                Item: Item
+            };
         } catch (error) {
             console.log("Put Error:", error);
         }

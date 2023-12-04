@@ -1,7 +1,7 @@
 const { Bot } = require('amesu');
 const sensitiveWordTool = require('./src/sensitiveword.js');
 const generateConfig = require('./config.js');
-const operationDatabase = require('./src/database.js');
+const DynamoDBClient = require('./src/AWSDatabase.js')
 const schedule = require('node-schedule');
 const tasks = require('./src/scheduledTasks.js')
 const getAccount = require('./src/getAccount.js')
@@ -92,52 +92,49 @@ async function msgProcess(data) {
     } else {
         switch (content) {
             case 'GPT4.0':
+                //初始化消息    
+                const rejectMsgParams = {
+                    //调用拒绝消息
+                    content: generateConfig(username).rejectedMsg,
+                    message_reference: {
+                        message_id: msgid
+                    },
+                    msg_id: msgid,
+                };
+                const allowedMsgParams = {
+                    //调用拒绝消息
+                    content: generateConfig(username).allowedMsg,
+                    message_reference: {
+                        message_id: msgid
+                    },
+                    msg_id: msgid,
+                };
                 //数据库查询userid
-                const selectSql = `SELECT userid,username,jointime FROM gpt_trials WHERE userid = ${userid};`;
-                try {
-                    const selectData = await operationDatabase(selectSql);
-                    logger.info('数据库查询完成。');
-                    const rejectMsgParams = {
-                        //调用拒绝消息
-                        content: generateConfig(username).rejectedMsg,
-                        message_reference: {
-                            message_id: msgid
-                        },
-                        msg_id: msgid,
-                    };
-                    const allowedMsgParams = {
-                        //调用拒绝消息
-                        content: generateConfig(username).allowedMsg,
-                        message_reference: {
-                            message_id: msgid
-                        },
-                        msg_id: msgid,
-                    };
-                    //userid是否在数据库
-                    if (selectData.length) {
-                        //1-查询到数据
-                        logger.info('查询到数据。');
-                        //检测是否大于lockTime小时
-                        const currentTime = new Date();
-                        const jointimeDate = new Date(selectData[0].jointime);
-                        const timeDifference = currentTime - jointimeDate;
-                        if (timeDifference / (1000 * 60 * 60) >= generateConfig().lockTime) {
-                            //执行sendmsg(你已经试用过，请联系管理员)
-                            await bot.api.sendChannelMessage(channelid, rejectMsgParams);
-                            logger.info(`${username},超时，未获得授权。`);
-                        } else {
-                            //执行sendmsg(恭喜你已获得权限，#试用频道)
-                            await bot.api.sendChannelMessage(channelid, allowedMsgParams);
-                            logger.info(`${username},获得授权。`);
-                        }
+                const result = await new DynamoDBClient().get('gpt_members', { userid: userid })
+                if (result !== 'NOTFOUND') {
+                    //查询到用户信息
+                    //判断是否超时试用
+                    if ((Math.floor(Date.now()) - result.jointime) / 1000 / 60 / 60 >= generateConfig().lockTime) {
+                        //执行sendmsg(你已经试用过，请联系管理员)
+                        await bot.api.sendChannelMessage(channelid, rejectMsgParams);
+                        logger.info(`${username},超时，未获得授权。`);
                     } else {
-                        //0-未查询到数据。
-                        logger.info('未查询到数据。');
-                        logger.info('写入数据......');
-                        //增加目标信息进数据库
-                        const addSql = 'INSERT INTO gpt_trials (userid, username, channelid) VALUES (?, ?, ?)';
-                        const addValues = [userid, username, channelid];
-                        await operationDatabase(addSql, addValues);
+                        //执行sendmsg(恭喜你已获得权限，#试用频道)
+                        await bot.api.sendChannelMessage(channelid, allowedMsgParams);
+                        logger.info(`${username},获得授权。`);
+                    }
+                } else {
+                    //未查询到用户信息
+                    logger.info('未查询到用户信息。');
+                    logger.info('写入数据......');
+                    //增加目标信息进数据库
+                    const result = await new DynamoDBClient().put('gpt_members', {
+                        "userid": userid,
+                        "username": username,
+                        "jointime": Math.floor(Date.now()),
+                    })
+                    if (result.code === 200) {
+                        logger.info('写入数据成功：\n', result.Item)
                         //添加身身份证
                         const { status } = await bot.api.addGuildMemberRole(generateConfig().guild_id, userid, generateConfig().GPTRols);
                         if (status === 204) {
@@ -147,9 +144,9 @@ async function msgProcess(data) {
                         } else {
                             logger.info(`status:${status},${username},授权失败。`);
                         }
+                    } else {
+                        logger.error('写入数据失败。')
                     }
-                } catch (error) {
-                    logger.error('ERROR:', error);
                 }
                 break;
             case 'GPT':
