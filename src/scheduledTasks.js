@@ -18,13 +18,6 @@ class DateFormatter {
 }
 
 
-const oldAccounts = `账号: roman6a8pe@toke*com
-密码: nfE5faCcECwG
-账号: kirilleudm@toke*com
-密码: riyigut12pLF
-账号: ng9buosipov@toke*com
-密码: W8WJVJXqbzKG`;
-
 
 
 async function tasksCheck(bot) {
@@ -49,7 +42,7 @@ async function tasksCheck(bot) {
         //如果该userid有
         if (res !== 'NOTFOUND') {
             //判断事件是否超过lock时间。
-            if (Math.floor((Date.now()-res.jointime)/1000/60/60) >= generateConfig().lockTime) {
+            if (Math.floor((Date.now() - res.jointime) / 1000 / 60 / 60) >= generateConfig().lockTime) {
                 try {
                     const { status } = await bot.api.deleteGuildMemberRole(
                         generateConfig().guild_id,
@@ -66,7 +59,7 @@ async function tasksCheck(bot) {
                 }
             } else {
                 //不超过24小时的。
-                logger.info('试用时间：',Math.floor((Date.now()-res.jointime)/1000/60/60),'小时');
+                logger.info('试用时间：', Math.floor((Date.now() - res.jointime) / 1000 / 60 / 60), '小时');
                 logger.info(`未超过指定试用时间：${generateConfig().lockTime}小时`);
             }
         } else {
@@ -93,7 +86,7 @@ async function dailyPins(bot) {
         //设置发送时间。
         timeTag = new Date();
         await bot.api.sendChannelMessage(generateConfig().trialChannel, {
-            content: `🎊以下试用账号，你可尝试，不过不保证体验效果。试用频道每人开发权限仅一周。如需稳定账号，请联系管理员。\n\n更新日期：${new DateFormatter().getFormattedDate()}\n${oldAccounts}\n${res}`,
+            content: `🎊以下试用账号，你可尝试，不过不保证体验效果。试用频道每人开发权限仅一周。如需稳定账号，请联系管理员。\n\n更新日期：${new DateFormatter().getFormattedDate()}\n${res}`,
         });
     } catch (error) {
         logger.error('发送主动消息错误：', error)
